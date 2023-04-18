@@ -180,7 +180,6 @@ class SaleAdvancePaymentInvInheit(models.TransientModel):
 
 class SaleOrderInherit(models.Model):
     _inherit = 'sale.order'
-
     def action_confirm(self):
         self._validate_order_before_confirming()
         self.env['customer.to.beta']._create_customer_in_beta_if_not_exists(self.partner_id)
@@ -425,11 +424,11 @@ class SaleOrderInherit(models.Model):
                 raise ValidationError(_('PO Date is mandatory for confirming a quotation'))
             if not self.place_of_supply:
                 raise ValidationError(_('Place of Supply is mandatory for confirming a quotation'))
-            if not self.rental_order and self.customer_branch.rental_order is True:
+            if not self.rental_order and self.partner_id.rental_order is True:
                 raise ValidationError(_('Rental Order is mandatory for this customer'))
-            if not self.rental_advance and self.customer_branch.rental_advance is True:
+            if not self.rental_advance and self.partner_id.rental_advance is True:
                 raise ValidationError(_('Rental Advance is mandatory for this customer'))
-            if not self.security_cheque and self.customer_branch.security_cheque is True:
+            if not self.security_cheque and self.partner_id.security_cheque is True:
                 raise ValidationError(_('Security Cheque is mandatory for this customer'))
             if not self.partner_id.vat:
                 raise ValidationError(_("This customer does not have a PAN. Please check customer details"))
