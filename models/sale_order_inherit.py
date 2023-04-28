@@ -10,6 +10,7 @@ import requests
 import traceback
 
 import datetime, mimetypes
+import pytz
 
 _logger = logging.getLogger(__name__)
 
@@ -45,8 +46,8 @@ def get_beta_godown_id(godown_result):
 
 
 def get_quotation_insert_query():
-    return "INSERT INTO quotations (created_by, customer_id, contact_name, phone_number, site_name, price_type, total, freight, gstn, billing_address_line, billing_address_city, billing_address_pincode, delivery_address_line, delivery_address_city, delivery_address_pincode, delivery_date, pickup_date, security_amt, freight_payment, godown_id, crm_account_id, created_at, updated_at) VALUES (%(created_by)s, %(customer_id)s, %(contact_name)s, %(phone_number)s, %(site_name)s, %(price_type)s, %(total)s, %(freight)s, %(gstn)s, %(billing_address_line)s, %(billing_address_city)s, %(billing_address_pincode)s, %(delivery_address_line)s, %(delivery_address_city)s, %(delivery_address_pincode)s, %(delivery_date)s, %(pickup_date)s, %(security_amt)s, %(freight_payment)s, %(godown_id)s, %(crm_account_id)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
-
+    red="INSERT INTO quotations (created_by, customer_id, contact_name, phone_number, site_name, price_type, total, freight, gstn, billing_address_line, billing_address_city, billing_address_pincode, delivery_address_line, delivery_address_city, delivery_address_pincode, delivery_date, pickup_date, security_amt, freight_payment, godown_id, crm_account_id, created_at, updated_at) VALUES (%(created_by)s, %(customer_id)s, %(contact_name)s, %(phone_number)s, %(site_name)s, %(price_type)s, %(total)s, %(freight)s, %(gstn)s, %(billing_address_line)s, %(billing_address_city)s, %(billing_address_pincode)s, %(delivery_address_line)s, %(delivery_address_city)s, %(delivery_address_pincode)s, %(delivery_date)s, %(pickup_date)s, %(security_amt)s, %(freight_payment)s, %(godown_id)s, %(crm_account_id)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
+    return red
 
 def get_quotation_items_insert_query():
     return "insert into quotation_items (quotation_id, item_code, unit_price, quantity, created_at, updated_at) VALUES (%(quotation_id)s, %(item_code)s, %(unit_price)s, %(quantity)s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
@@ -251,6 +252,7 @@ class SaleOrderInherit(models.Model):
                                               place_of_supply_code, beta_bill_godown_id, beta_godown_id, "0")
             cursor.execute(get_order_insert_query(), order_data)
             order_id = cursor.lastrowid
+            # order
             _logger.info("evt=SEND_ORDER_TO_BETA msg=Order saved with id" + str(order_id))
 
             try:
@@ -288,6 +290,12 @@ class SaleOrderInherit(models.Model):
             cursor.close()
             connection.commit()
 
+
+            planning = self.env['res.partner'].search([('email','=','planning@youngman.co.in')])
+            message = "A new order has been added for {} on {}. Please plan the delivery. Youngman India Pvt. Ltd.".format(self.job_order.split('/')[-1], self._get_current_date_time())
+            self.env['ym.sms'].send_sms(planning, message)
+
+
         except Error as err:
             _logger.error("evt=SEND_ORDER_TO_BETA msg=", exc_info=1)
             connection.rollback()
@@ -295,6 +303,12 @@ class SaleOrderInherit(models.Model):
         except Exception as e:
             connection.rollback()
             raise UserError(_(e))
+
+    def _get_current_date_time(self):
+        ist = pytz.timezone('Asia/Kolkata')
+        now = datetime.datetime.now(ist)
+        current_time = now.strftime("%I:%M:%S %p")
+        return current_time
 
     def _get_contacts_to_notify(self, order_id):
         return [
