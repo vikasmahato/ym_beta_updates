@@ -290,10 +290,12 @@ class SaleOrderInherit(models.Model):
             cursor.close()
             connection.commit()
 
-
-            planning = self.env['res.partner'].search([('email','=','planning@youngman.co.in')],limit=1)
-            message = "A new order has been added for {} on {}. Please plan the delivery. Youngman India Pvt. Ltd.".format(self.job_order.split('/')[-1], self._get_current_date_time())
-            self.env['ym.sms'].send_sms(planning, message)
+            try:
+                planning = self.env['res.partner'].search([('email','=','planning@youngman.co.in')],limit=1)
+                message = "A new order has been added for {} on {}. Please plan the delivery. Youngman India Pvt. Ltd.".format(self.job_order.split('/')[-1], self._get_current_date_time())
+                self.env['ym.sms'].send_sms(planning, message)
+            except Error as e:
+                _logger.error("evt=SEND_SMS msg=", exc_info=1)
 
 
         except Error as err:
