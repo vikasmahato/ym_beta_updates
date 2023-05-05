@@ -192,14 +192,14 @@ class SaleOrderInherit(models.Model):
             cursor = connection.cursor()
             email = self.env.user.login.lower()
 
-            _logger.info("evt=SEND_ORDER_TO_BETA msg=Get created by from beta")
-            cursor.execute(get_beta_user_id_from_email_query(), [email])
-            created_by = get_create_by(cursor.fetchone())
-
-            cheque_ownership = created_by
-
             if self.partner_id.team_id.name == 'INSIDE SALES':
                 created_by = 568
+            else:
+                _logger.info("evt=SEND_ORDER_TO_BETA msg=Get created by from beta")
+                cursor.execute(get_beta_user_id_from_email_query(), [email])
+                created_by = get_create_by(cursor.fetchone())
+
+            cheque_ownership = created_by
 
             _logger.info("evt=SEND_ORDER_TO_BETA msg=Get customer id from beta")
 
