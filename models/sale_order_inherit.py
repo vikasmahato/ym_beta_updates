@@ -287,8 +287,6 @@ class SaleOrderInherit(models.Model):
                                    _get_order_item_feed_details(job_order_number, quotation_items))
 
             super(SaleOrderInherit, self).action_confirm()
-            cursor.close()
-            connection.commit()
 
             try:
                 planning = self.env['res.partner'].search([('email','=','planning@youngman.co.in')],limit=1)
@@ -297,6 +295,8 @@ class SaleOrderInherit(models.Model):
             except Error as e:
                 _logger.error("evt=SEND_SMS msg=", exc_info=1)
 
+            cursor.close()
+            connection.commit()
 
         except Error as err:
             _logger.error("evt=SEND_ORDER_TO_BETA msg=", exc_info=1)
