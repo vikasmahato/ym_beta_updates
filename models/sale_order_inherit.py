@@ -183,6 +183,32 @@ class SaleOrderInherit(models.Model):
 
     beta_order_id = fields.Integer(string = "Beta Order Id")
 
+    def action_extend(self):
+        try:
+            connection = self._get_connection()
+            connection.autocommit = False
+            cursor = connection.cursor()
+
+            _logger.info("evt=EXTEND_ORDER msg=Saving PO data")
+
+            cursor.execute("INSERT INTO extensions (order_id, old_rental_order) SELECT id as order_id, rental_order as old_rental_order FROM orders WHERE id = %s",(self.beta_order_id,))
+            cursor.execute("UPDATE quotations SET pickup_date=%s WHERE order_id=%s",(self.pickup_date, self.beta_order_id))
+            cursor.execute("UPDATE orders SET rental_order = %s WHERE id = %s",[self._get_document_if_exists('rental_order'), self.beta_order_id])
+            cursor.execute("UPDATE challans SET deleted_at = current_timestamp WHERE deleted_at IS NULL AND challan_type = 'Pickup' AND challans.recieving IS NULL AND order_id = %s",(self.beta_order_id,))
+
+            connection.commit()
+
+        except Error as err:
+            _logger.error("evt=SEND_ORDER_TO_BETA msg=", exc_info=1)
+            connection.rollback()
+            raise UserError(_(err))
+        except Exception as e:
+            connection.rollback()
+            raise UserError(_(e))
+
+
+    beta_order_id = fields.Integer(string = "Beta Order Id")
+
     def action_amend(self, vals):
         try:
             self._validate_if_amendment_allowed(vals)
