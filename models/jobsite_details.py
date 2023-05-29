@@ -25,7 +25,7 @@ class JobsiteDetails(models.Model):
                 FROM orders
                 INNER JOIN quotations q ON orders.id = q.order_id
                 INNER JOIN job_site js ON q.site_name = js.site_name
-                WHERE js.site_name = %s;
+                WHERE orders.active=1 and js.site_name = %s;
             """
             cursor.execute(query, (select_site_name,))
             rows = cursor.fetchall()
