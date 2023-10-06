@@ -10,7 +10,7 @@
     'website': "https://www.youngman.co.in/",
     'sequence': -100,
     "external_dependencies": {"python": ["mysql.connector"], "bin": []},
-    'depends': ['base', 'sale_management', 'sale', 'jobsites', 'youngman_customers', 'ym_sms'],
+    'depends': ['base', 'jobsites', 'youngman_customers', 'ym_sms','sh_sale_dynamic_approval'],
 
     'data': [
         'views/views.xml',

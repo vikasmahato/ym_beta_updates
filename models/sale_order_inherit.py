@@ -208,7 +208,7 @@ class SaleOrderInherit(models.Model):
             raise UserError(_(e))
 
     def action_confirm(self):
-        if self.is_freight_approval_required or self.is_order_amount_approval_required or self.is_order_line_amount_approval_required:
+        if self.is_sale_order_approval_required:
             super(SaleOrderInherit, self).action_confirm()
             return
         self._validate_order_before_confirming()
