@@ -208,6 +208,9 @@ class SaleOrderInherit(models.Model):
             raise UserError(_(e))
 
     def action_confirm(self):
+        if self.is_freight_approval_required or self.is_order_amount_approval_required or self.is_order_line_amount_approval_required:
+            super(SaleOrderInherit, self).action_confirm()
+            return
         self._validate_order_before_confirming()
         self.env['customer.to.beta']._create_customer_in_beta_if_not_exists(self.partner_id)
         self._create_branch_in_beta_if_not_exists() #For branches that were added post initial customer creation
