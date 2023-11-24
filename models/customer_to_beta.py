@@ -66,9 +66,8 @@ class CustomerToBeta(models.TransientModel):
                     "credit_limit": master_customer.credit_limit,
                     "credit_rating": master_customer.credit_rating,
                     "days_due": False if not due_days else str(due_days),
-                    "billing_process": master_customer.bill_submission_process.name,
-                    "team": master_customer.customer_category,
-                    "asigned_to": master_customer.user_id.login
+                    "billing_process": master_customer.bill_submission_process.name
+
                 }
             ],
             "branches": branches
@@ -107,8 +106,6 @@ class CustomerToBeta(models.TransientModel):
                     'security_cheque' : master_customer.security_cheque,
                     'billing_process': master_customer.bill_submission_process.name,
                     'is_non_gst': master_customer.is_non_gst_customer,
-                    'team': master_customer.customer_category,
-                    "asigned_to": master_customer.user_id.login
                 }
             ],
             "branches": branches
