@@ -219,7 +219,7 @@ class SaleOrderInherit(models.Model):
             connection = self._get_connection()
             connection.autocommit = False
             cursor = connection.cursor()
-            email = self.env.user.login.lower()
+            email = self.partner_id.user_id.email.lower()
 
             if self.partner_id.team_id.name == 'INSIDE SALES':
                 created_by = 568
