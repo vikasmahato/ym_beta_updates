@@ -124,6 +124,21 @@ def _concatenate_address_string(address_strings):
     return ', '.join(map(str, arr))
 
 
+def _get_order_item_feed_details(self,job_order, quotation_items, existing_quotation_items_at_beta, existing_order_item_feed):
+    item_feed_details = []
+
+    for item in quotation_items:
+        for existing_item_code in existing_quantity_at_beta:
+            for existing_item_feed in existing_order_item_feed:
+                if (item['item_code'] == existing_item_code[0]) and (existing_item_feed[0] == item['item_code']):
+                    item_feed_details.append({
+                        'job_order': job_order,
+                        'item_code': item['item_code'],
+                        'quantity': item['quantity'] - existing_item_code[1] + existing_item_feed[1],
+                    })
+
+    return item_feed_details
+
 def _get_order_item_feed_details(job_order, quotation_items):
     item_feed_details = []
     for item in quotation_items:
@@ -133,6 +148,9 @@ def _get_order_item_feed_details(job_order, quotation_items):
             'quantity': item['quantity'],
         })
     return item_feed_details
+
+
+
 
 def _get_beta_compatible_freight_type(freight_type):
     frieght_map = {
@@ -200,11 +218,15 @@ class SaleOrderInherit(models.Model):
             cursor = connection.cursor()
 
             self._validate_if_amendment_allowed(vals)
-
+            quotation_id = (self.job_order.split('/')[-1])
             amendment_details = self._get_amendment_details(vals)
             cursor.execute("INSERT INTO amend_order_log (order_id, freight, amendment_doc, po_no, is_amended) VALUES (%(order_id)s, %(freight)s, %(amendment_doc)s, %(po_no)s, %(is_amended)s)", amendment_details)
             cursor.execute("SELECT LAST_INSERT_ID()")
             last_amend_order_log_id = cursor.fetchone()[0]
+            existing_quotation_items_at_beta = cursor.execute("SELECT item_code , quantity FROM quotation_items WHERE quotation_id = %s",(quotation_id,))
+            existing_quotation_items_at_beta = cursor.fetchall()
+            existing_order_item_feed = cursor.execute("SELECT item_code , quantity FROM order_item_feed WHERE job_order = %s",(self.job_order,))
+            existing_order_item_feed = cursor.fetchall()
 
             quotation_items = []
             for order_line in vals.get('order_line', []):
@@ -252,7 +274,7 @@ class SaleOrderInherit(models.Model):
             _logger.info("evt=SEND_ORDER_TO_BETA msg=Quotation items saved")
 
             _logger.info("evt=SEND_ORDER_TO_BETA msg=insert into order item feed")
-            item_feed_details = _get_order_item_feed_details(self.job_order, quotation_items)
+            item_feed_details = _get_order_item_feed_details(self.job_order, quotation_items, existing_quotation_items_at_beta, existing_order_item_feed)
             for item_detail in item_feed_details:
                 cursor.execute(get_order_item_feed_insert_query(), item_detail)
 
