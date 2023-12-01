@@ -124,7 +124,7 @@ def _concatenate_address_string(address_strings):
     return ', '.join(map(str, arr))
 
 
-def _get_order_item_feed_details_amend_order(self,job_order, quotation_items, existing_quotation_items_at_beta, existing_order_item_feed):
+def _get_order_item_feed_details_amend_order(job_order, quotation_items, existing_quantity_at_beta, existing_order_item_feed):
     item_feed_details = []
 
     for item in quotation_items:
@@ -136,6 +136,11 @@ def _get_order_item_feed_details_amend_order(self,job_order, quotation_items, ex
                         'item_code': item['item_code'],
                         'quantity': item['quantity'] - existing_item_code[1] + existing_item_feed[1],
                     })
+
+    for item in item_feed_details:
+        if item['quantity'] <0:
+           raise Exception(_('Cannot Amend Less Then Material To Be Sent'))
+
 
     return item_feed_details
 
@@ -274,7 +279,7 @@ class SaleOrderInherit(models.Model):
             _logger.info("evt=SEND_ORDER_TO_BETA msg=Quotation items saved")
 
             _logger.info("evt=SEND_ORDER_TO_BETA msg=insert into order item feed")
-            item_feed_details =_get_order_item_feed_details_amend_order(self.job_order, quotation_items, existing_quotation_items_at_beta, existing_order_item_feed)
+            item_feed_details = _get_order_item_feed_details_amend_order(self.job_order, quotation_items, existing_quotation_items_at_beta, existing_order_item_feed)
             for item_detail in item_feed_details:
                 cursor.execute(get_order_item_feed_insert_query(), item_detail)
 
