@@ -128,19 +128,29 @@ def _get_order_item_feed_details_amend_order(job_order, quotation_items, existin
     item_feed_details = []
 
     for item in quotation_items:
+        found_existing_item = False
         for existing_item_code in existing_quantity_at_beta:
             for existing_item_feed in existing_order_item_feed:
                 if (item['item_code'] == existing_item_code[0]) and (existing_item_feed[0] == item['item_code']):
+                    quantity = item['quantity'] - existing_item_code[1] + existing_item_feed[1]
+
+                    if quantity < 0:
+                        raise Exception(_('Cannot Amend Less Than Material To Be Sent'))
+
                     item_feed_details.append({
                         'job_order': job_order,
                         'item_code': item['item_code'],
-                        'quantity': item['quantity'] - existing_item_code[1] + existing_item_feed[1],
+                        'quantity': quantity,
                     })
+                    found_existing_item = True
+                    break
 
-    for item in item_feed_details:
-        if item['quantity'] <0:
-           raise Exception(_('Cannot Amend Less Then Material To Be Sent'))
-
+        if not found_existing_item:
+            item_feed_details.append({
+                'job_order': job_order,
+                'item_code': item['item_code'],
+                'quantity': item['quantity'],
+            })
 
     return item_feed_details
 
@@ -153,9 +163,6 @@ def _get_order_item_feed_details(job_order, quotation_items):
             'quantity': item['quantity'],
         })
     return item_feed_details
-
-
-
 
 def _get_beta_compatible_freight_type(freight_type):
     frieght_map = {
