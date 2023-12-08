@@ -290,6 +290,10 @@ class SaleOrderInherit(models.Model):
             for item_detail in item_feed_details:
                 cursor.execute(get_order_item_feed_insert_query(), item_detail)
 
+            get_order_realese_status = cursor.execute("SELECT released_at FROM orders WHERE quotation_id = %s",(quotation_id,))
+            get_order_realese_status = cursor.fetchall()
+            if get_order_realese_status[0][0] is not None:
+                cursor.execute("UPDATE orders SET released_at = NULL WHERE quotation_id = %s", (quotation_id,))
 
             connection.commit()
         except Error as err:
