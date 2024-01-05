@@ -644,6 +644,8 @@ class SaleOrderInherit(models.Model):
                 raise ValidationError(_("Bill Submission Office Branch is required."))
             if not self.partner_id.team_id:
                 raise ValidationError(_("Sales team for master customer is not available."))
+            if not self.partner_id.user_id.email:
+                raise ValidationError(_("Sales Person for master customer is not available."))
             if not self.partner_id.credit_rating:
                 raise ValidationError(_("Credit Rating for master customer is not available."))
 
